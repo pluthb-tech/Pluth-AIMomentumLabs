@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Business File Viewer — Golf Achievement</title>
+<meta name="description" content="Paste your Build Room Business File and see your whole business on one screen: every section's status, your progress, the one session to run next, and your Build Plan.">
+<style>
+:root{--bg:#0C1D18;--panel:#142B23;--line:#2a2a3a;--text:#e8e8f0;--muted:#9a9ab0;--dim:#6c6c82;--accent:#4C9B7B;--accent2:#D9C590;--good:#34d399;--warn:#D9C590;--bad:#f87171;--input:#1C382D;--blue:#60a5fa}
+*{box-sizing:border-box;margin:0;padding:0}
+html{color-scheme:dark}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;line-height:1.55;padding-block:28px;padding-inline:16px;min-height:100vh}
+.wrap{max-width:980px;margin:0 auto}
+.eyebrow{color:var(--muted);font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+h1{font-size:clamp(28px,6vw,42px);font-weight:700;letter-spacing:-1px;line-height:1.05;text-wrap:balance;background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+.sub{color:#b8b8c8;font-size:15px;max-width:64ch}
+h2{font-size:16px;margin:0 0 8px;color:#fff}
+.hint{color:var(--muted);font-size:13px}
+button{font:inherit;cursor:pointer}
+.btn{background:linear-gradient(135deg,var(--accent),#28684F);border:0;color:#fff;font-weight:600;padding:10px 16px;border-radius:9px}
+.ghost{background:transparent;border:1px solid #3a3a4e;color:var(--muted);padding:9px 14px;border-radius:9px}
+.ghost:hover{color:#fff;border-color:var(--accent)}
+.btn:focus-visible,.ghost:focus-visible,.sec:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+textarea{width:100%;min-height:150px;background:var(--input);border:1px solid #3a3a4e;border-radius:10px;color:var(--text);padding:12px;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;resize:vertical}
+textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+.drop{margin-top:18px}
+.drop.over{border-color:var(--accent)}
+.ok{color:var(--good);font-size:13px}
+.err{color:var(--bad);font-size:13px}
+/* dashboard */
+#dash{display:none;margin-top:18px}
+#dash.on{display:block}
+.head{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:end;margin-bottom:14px}
+.head .biz{font-size:clamp(22px,4vw,30px);font-weight:700;color:#fff;letter-spacing:-.5px;line-height:1.1}
+.head .own{color:var(--muted);font-size:14px;margin-top:4px}
+.head .upd{color:var(--dim);font-size:12px;text-align:right;white-space:nowrap}
+.prog{background:var(--input);border:1px solid #3a3a4e;border-radius:99px;height:14px;overflow:hidden;display:flex}
+.prog .c{background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.prog .p{background:#7a5a1a}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--muted)}
+.legend b{color:#fff}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}
+.dot.c{background:var(--accent)}.dot.p{background:#7a5a1a}.dot.n{background:#3a3a4e}
+/* next */
+.next{margin-top:14px;background:linear-gradient(135deg,#1a1207 0%,#142B23 70%);border:1px solid #4C9B7B60;border-radius:14px;padding:18px}
+.next .k{color:var(--accent2);font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+.next .t{font-size:clamp(18px,3.5vw,24px);font-weight:700;color:#fff;letter-spacing:-.3px}
+.next .why{color:#d8d8e4;font-size:14px;margin:8px 0 12px;max-width:70ch}
+.say{display:inline-block;background:var(--input);border:1px solid #3a3a4e;border-radius:8px;padding:5px 12px;font-family:ui-monospace,Menlo,monospace;font-size:13px;color:var(--accent2)}
+.next .alt{margin-top:10px;color:var(--muted);font-size:13px}
+.goal{margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+select{background:var(--input);border:1px solid #3a3a4e;border-radius:8px;color:var(--text);padding:7px 10px;font:inherit;font-size:13px}
+.path{margin-top:8px;color:#d8d8e4;font-size:13px}
+.path .step{display:inline-block;background:var(--input);border:1px solid #3a3a4e;border-radius:99px;padding:3px 10px;margin:3px 4px 3px 0;font-size:12px}
+.path .step.done{border-color:#34d39960;color:var(--good)}
+.path .step.gap{border-color:var(--accent);color:var(--accent2)}
+/* sequences */
+.seqs{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:14px}
+.seq{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+.seq h3{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.sec{background:var(--input);border:1px solid #3a3a4e;border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:pointer;text-align:left;width:100%;color:var(--text)}
+.sec .top{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.sec .nm{font-weight:600;color:#fff;font-size:14px}
+.sec .nm small{color:var(--dim);font-weight:400;margin-right:6px}
+.pill{font-size:11px;padding:2px 9px;border-radius:99px;border:1px solid;white-space:nowrap}
+.pill.complete{color:var(--good);border-color:#34d39960}
+.pill.provisional{color:var(--warn);border-color:#D9C59060}
+.pill.notstarted{color:var(--dim);border-color:#3a3a4e}
+.pill.other{color:var(--blue);border-color:#60a5fa60}
+.sec .meta{color:var(--dim);font-size:11px;margin-top:4px}
+.sec .fill{height:4px;background:#2a2a3a;border-radius:99px;margin-top:8px;overflow:hidden}
+.sec .fill i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.sec .body{display:none;margin-top:10px;border-top:1px solid #2a2a3a;padding-top:8px}
+.sec.open .body{display:block}
+.sec .f{font-size:13px;color:#d8d8e4;margin:4px 0;overflow-wrap:anywhere}
+.sec .f b{color:var(--muted);font-weight:500}
+.sec .f.empty{color:var(--dim)}
+.sec .f.sub{padding-left:14px;color:#b8b8c8}
+.sec .flag{color:var(--warn);font-size:12px;margin-top:6px}
+/* panels */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.bp{margin-top:12px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{color:var(--muted);font-size:11px;letter-spacing:1.2px;text-transform:uppercase;text-align:left;padding:8px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top;min-width:110px}
+#bp table{min-width:640px}
+#log table{min-width:420px}
+tr:last-child td{border-bottom:0}
+.tw{overflow-x:auto}
+.st{font-size:11px;padding:2px 8px;border-radius:99px;border:1px solid #3a3a4e;color:var(--muted);white-space:nowrap}
+.st.shipped{color:var(--good);border-color:#34d39960}.st.building{color:var(--blue);border-color:#60a5fa60}.st.scheduled{color:var(--accent2);border-color:#D9C59060}.st.parked{color:var(--dim)}.st.captured{color:#fff}
+.stale{color:var(--warn);font-size:12px}
+.foot{text-align:center;color:var(--dim);font-size:12px;margin-top:36px;padding-top:18px;border-top:1px solid var(--line)}
+.foot button{background:none;border:0;color:var(--dim);text-decoration:underline;font-size:12px}
+@media(max-width:700px){.two{grid-template-columns:1fr}.head{grid-template-columns:1fr}.head .upd{text-align:left;white-space:normal}}
+.two>.panel,.seq,.panel{min-width:0;max-width:100%}
+.tw{max-width:100%}
+@media print{body{background:#fff;color:#111}.panel,.seq,.sec,.next{border-color:#ccc;background:#fff;color:#111}.drop,.foot,.ghost,.btn{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Golf Achievement · Build Room · Anytime tool</div>
+  <h1>Your business on one screen</h1>
+  <p class="sub">Paste your Business File. See every section's status, how far along you are, the one session to run next, and your Build Plan. Nothing leaves this page.</p>
+
+  <div class="panel drop" id="drop">
+    <h2>Paste your Business File</h2>
+    <p class="hint">Open <code>BUILDROOM_BUSINESS_FILE.md</code>, select all, copy, paste here. Or drop the file onto this box.</p>
+    <textarea id="src" placeholder="# Build Room Business File&#10;&#10;**Owner:** …" spellcheck="false"></textarea>
+    <div class="row" style="margin-top:10px">
+      <button class="btn" id="go">Show my business</button>
+      <label class="ghost" style="cursor:pointer">Open a file<input type="file" id="file" accept=".md,.txt,text/markdown,text/plain" hidden></label>
+      <button class="ghost" id="sample">Load Golf Achievement draft</button>
+      <span class="ok" id="msg" hidden></span>
+      <span class="err" id="errmsg" hidden></span>
+    </div>
+  </div>
+
+  <div id="dash">
+    <div class="panel">
+      <div class="head">
+        <div><div class="biz" id="biz">—</div><div class="own" id="own"></div></div>
+        <div class="upd" id="upd"></div>
+      </div>
+      <div class="prog" id="prog" role="img" aria-label="Progress"></div>
+      <div class="legend" id="legend"></div>
+    </div>
+
+    <div class="next" id="next"></div>
+
+    <div class="seqs" id="seqs"></div>
+
+    <div class="panel bp" id="bp"></div>
+
+    <div class="two">
+      <div class="panel" id="log"></div>
+      <div class="panel" id="extras"></div>
+    </div>
+
+    <div class="row" style="margin-top:14px">
+      <button class="ghost" id="copyNext">Copy my next step</button>
+      <button class="ghost" id="print">Print / save as PDF</button>
+      <button class="ghost" id="again">Paste a different file</button>
+      <span class="ok" id="msg2" hidden></span>
+    </div>
+  </div>
+
+  <div class="foot">Build Room · AI Momentum Labs · Your file stays in this browser. <button id="clear">Forget my last paste</button></div>
+</div>
+
+<script>
+(function(){
+"use strict";
+const KEY="golfachievement.viewer.v1";
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ---- registry: the program map (mirrors buildroom-os/references/roadmap.md) ---- */
+const REG={
+  1:{t:"Business Snapshot",skill:"Build Room OS",say:"I'm new to the Build Room — set me up",req:[]},
+  2:{t:"Ideal Client Avatar",skill:"Ideal Client Avatar",say:"Help me build my ideal client avatar",req:[]},
+  3:{t:"Signature Offer",skill:"Signature Offer",say:"Help me build my signature offer",req:[2]},
+  4:{t:"Positioning & Messaging",skill:"Positioning & Messaging",say:"Help me position my business",req:[2,3]},
+  5:{t:"Offer Page",skill:"Offer Page Copy",say:"Write my offer page",req:[2,3,4]},
+  6:{t:"Funnel & Automation",skill:"Funnel Map",say:"Help me map my funnel",req:[1],soft:[2,3]},
+  7:{t:"Lead Capture",skill:"Lead Capture",say:"Help me build my opt-in page",req:[6]},
+  9:{t:"Operations & SOPs",skill:"SOP Creator",say:"Help me document my process",req:[1]},
+  10:{t:"Team & Hiring",skill:"Hiring Ad + Interview Kit",say:"Help me hire for this role",req:[9]},
+  11:{t:"Training & Onboarding",skill:"Team Training Doc Builder",say:"Help me train my new hire",req:[9,10]},
+  12:{t:"Weekly Ops",skill:"Weekly Ops Dashboard",say:"What numbers should I be watching every week?",req:[9,11]},
+  13:{t:"Build Plan",skill:"Brainstorm Session",say:"Let's brainstorm",req:[]},
+  14:{t:"Lead Generation Engine",skill:"Lead Gen Machine",say:"Help me get more leads",req:[1],soft:[2,3]},
+  15:{t:"Sales Conversations",skill:"Sales Conversations",say:"Help me with my sales call",req:[3],soft:[2,4]},
+  16:{t:"Follow-Up Engine",skill:"Decision Machine",say:"Build my follow-up system",req:[3,6],soft:[2,7]},
+  17:{t:"Founder Compass",skill:"Compass",say:"Build my compass",req:[]},
+  8:{t:"Session Log",skill:"",say:"",req:[]}
+};
+const SEQ=[
+  {name:"Foundation · Offer Clarity",secs:[2,3,4,5]},
+  {name:"Funnel · Automation",secs:[6,16,7]},
+  {name:"Lead Generation",secs:[14]},
+  {name:"Sales",secs:[15]},
+  {name:"Operations · SOPs",secs:[9,10,11,12]},
+  {name:"Anytime",secs:[1,13,17]}
+];
+const GOALS={"5":"a sales page","14":"more leads","15":"a sales call script","7":"an opt-in page","16":"automated follow-up","6":"a funnel","9":"to delegate a process","11":"a trained hire","12":"my numbers on one page"};
+
+/* ---- parser ---- */
+const PLACEHOLDER=/^(—|-|–|\[.*\]|n\/a|tbd|todo|\$\s*—|)$/i;
+function isFilled(v){v=(v||"").trim();if(PLACEHOLDER.test(v))return false;
+  // "a: — · b: —" style: filled if any labelled part has content
+  if(/·/.test(v)&&/:/.test(v)){const parts=v.split("·");if(parts.every(p=>/:/.test(p)))return parts.some(p=>{const q=p.split(":").slice(1).join(":").trim();return q&&!PLACEHOLDER.test(q)});}
+  return true}
+function normStatus(s){s=(s||"").toLowerCase().trim();if(/complete|done/.test(s))return"complete";if(/provisional|draft|partial/.test(s))return"provisional";if(!s||/not started|none|—/.test(s))return"notstarted";return"other"}
+function parse(md){
+  const lines=md.replace(/\r/g,"").split("\n");
+  const doc={owner:"",business:"",updated:"",sections:[],extras:[],log:[],raw:md};
+  let cur=null;
+  const hdr=(re)=>{const m=md.match(re);return m?m[1].trim():""};
+  doc.owner=hdr(/\*\*Owner:\*\*\s*(.+)/);doc.business=hdr(/\*\*Business:\*\*\s*(.+)/);doc.updated=hdr(/\*\*Last updated:\*\*\s*(.+)/);
+  for(const raw of lines){
+    const h=raw.match(/^##\s+(\d+)\.\s*(.+?)\s*$/);
+    if(h){cur={n:+h[1],title:h[2].trim(),status:"notstarted",statusRaw:"",updated:"",by:"",fields:[],lines:[],warn:[]};doc.sections.push(cur);continue}
+    if(!cur)continue;
+    cur.lines.push(raw);
+    const st=raw.match(/\*\*Status:\*\*\s*([^·\n]+)(?:·\s*\*\*Updated:\*\*\s*([^·\n]+))?(?:·\s*\*\*By:\*\*\s*(.+))?/);
+    if(st){cur.statusRaw=st[1].trim();cur.status=normStatus(st[1]);cur.updated=(st[2]||"").trim();cur.by=(st[3]||"").trim();continue}
+    if(/^\*\*⚠|^⚠|^_Built by/.test(raw.trim())){if(/⚠/.test(raw))cur.warn.push(raw.replace(/\*\*/g,"").trim());continue}
+    const f=raw.match(/^(\s*)-\s+\*\*(.+?)\*\*:?\s*(.*)$/);
+    if(f){cur.fields.push({label:f[2].replace(/:$/,""),value:f[3].trim(),sub:f[1].length>0,filled:isFilled(f[3])});continue}
+    const s=raw.match(/^(\s+)-\s+(.+)$/);
+    if(s&&cur.fields.length){const v=s[2].trim();cur.fields.push({label:"",value:v,sub:true,filled:isFilled(v)&&!/^_.*_$/.test(v)});continue}
+  }
+  // session log table
+  const log=doc.sections.find(s=>s.n===8&&/session log/i.test(s.title));
+  if(log){for(const l of log.lines){const m=l.match(/^\|(.+)\|$/);if(!m)continue;const cells=m[1].split("|").map(c=>c.trim());if(cells.length<3||/^-+$/.test(cells[0])||/^date$/i.test(cells[0])||!cells[0])continue;doc.log.push(cells)}}
+  // build plan rows
+  const bp=doc.sections.find(s=>s.n===13&&/build plan/i.test(s.title));
+  doc.plan={rows:[],parked:[],open:[]};
+  if(bp){let mode="";for(const l of bp.lines){const lab=l.match(/^-\s+\*\*(Ideas|Parked|Open questions|Brainstorm log|Last brainstorm)/i);if(lab){mode=lab[1].toLowerCase();if(/brainstorm log|last brainstorm/.test(mode)){const v=l.split(/\*\*:?\s*/).pop().trim();if(isFilled(v))doc.plan[mode.startsWith("last")?"last":"loc"]=v;mode=""}continue}
+    const item=l.match(/^\s+-\s+(.+)$/);if(!item||!mode)continue;const v=item[1].trim();if(!isFilled(v)||/^_.*_$/.test(v))continue;
+    const parts=v.split(/\s*·\s*/);
+    if(mode==="ideas"){const r={idea:parts[0]||"",source:parts[1]||"",status:(parts[2]||"").toLowerCase().trim(),owner:parts[3]||"",next:parts[4]||"",produced:parts[5]||"",raw:v};const d=v.match(/\d{4}-\d{2}-\d{2}/);r.date=d?d[0]:"";doc.plan.rows.push(r)}
+    else if(mode==="parked")doc.plan.parked.push({idea:parts[0]||v,why:parts[1]||"",revisit:parts[2]||""});
+    else doc.plan.open.push(v)}}
+  // registry mapping: first section with a known number and matching title wins; others are extras
+  doc.map={};
+  for(const s of doc.sections){const r=REG[s.n];const titleOk=r&&s.title.toLowerCase().replace(/&/g,"and").includes(r.t.toLowerCase().replace(/&/g,"and").split(" ")[0]);
+    if(r&&titleOk&&!doc.map[s.n])doc.map[s.n]=s;else doc.extras.push(s)}
+  return doc;
+}
+
+/* ---- navigator ---- */
+function status(doc,n){const s=doc.map[n];return s?s.status:"notstarted"}
+function met(doc,n){const st=status(doc,n);return st==="complete"||st==="provisional"}
+function nextStep(doc){
+  if(status(doc,1)==="notstarted")return{n:1,why:"Your file has no Business Snapshot yet. The navigator builds it in five minutes and everything else reads from it.",kind:"start"};
+  for(const seq of SEQ){if(seq.name==="Anytime")continue;
+    for(const n of seq.secs){const st=status(doc,n);if(st==="complete")continue;
+      const r=REG[n];const missing=r.req.filter(p=>!met(doc,p));
+      if(missing.length){const m=missing[0];return{n:m,why:`${r.t} needs ${missing.map(x=>"§"+x+" "+REG[x].t).join(" and ")} first. Start there.`,kind:"prereq"}}
+      const debt=r.req.filter(p=>status(doc,p)==="provisional");
+      if(st==="notstarted"&&debt.length){const d=debt[0];return{n:d,why:`§${d} ${REG[d].t} is provisional, and ${r.t} would build on it. Harden it first: one session, and everything after it gets stronger.`,kind:"harden"}}
+      if(st==="provisional")return{n,why:`§${n} ${r.t} is provisional. Re-run its session to make it load-bearing before building higher.`,kind:"harden"};
+      return{n,why:`First gap in the ${seq.name.split(" · ")[0]} sequence with its prerequisites met.`,kind:"next"}}}
+  return{n:13,why:"Every sequence is complete. Run a brainstorm to decide what the next month builds, or check your Build Plan below for captured ideas waiting on a date.",kind:"done"};
+}
+function shipTip(doc){const tips=[];const s5=doc.map[5],s7=doc.map[7];
+  if(s5&&s5.status!=="notstarted"){const f=s5.fields.find(x=>/page status/i.test(x.label));if(f&&/draft/i.test(f.value)&&!/live/i.test(f.value.replace(/draft\s*\/\s*live/i,"")))tips.push("§5 Offer Page is still a draft. Publishing it may be worth more than a new session.")}
+  if(s7&&s7.status!=="notstarted"){const f=s7.fields.find(x=>/landing page/i.test(x.label));if(f&&/draft|not live|building/i.test(f.value))tips.push("§7 landing page isn't live yet. Building on unshipped work compounds nothing.")}
+  return tips}
+function goalPath(doc,target){const seen=new Set();const order=[];(function walk(n){if(seen.has(n))return;seen.add(n);(REG[n].req||[]).forEach(walk);order.push(n)})(+target);return order}
+
+/* ---- render ---- */
+let DOC=null,NEXT=null;
+function render(doc){
+  DOC=doc;
+  $("biz").textContent=doc.business&&!/\[.*\]/.test(doc.business)?doc.business:"(business name not set)";
+  $("own").textContent=doc.owner&&!/\[.*\]/.test(doc.owner)?doc.owner:"";
+  $("upd").textContent=doc.updated&&!/\[.*\]/.test(doc.updated)?"Last updated "+doc.updated:"";
+  const build=[1,2,3,4,5,6,7,9,10,11,12,13,14,15,16,17];
+  const c=build.filter(n=>status(doc,n)==="complete").length,p=build.filter(n=>status(doc,n)==="provisional").length;
+  $("prog").innerHTML=`<div class="c" style="width:${c/build.length*100}%"></div><div class="p" style="width:${p/build.length*100}%"></div>`;
+  $("legend").innerHTML=`<span><i class="dot c"></i><b>${c}</b> complete</span><span><i class="dot p"></i><b>${p}</b> provisional</span><span><i class="dot n"></i><b>${build.length-c-p}</b> not started</span><span>· ${build.length} sections · ${doc.log.length} session${doc.log.length===1?"":"s"} logged</span>`;
+  // next
+  NEXT=nextStep(doc);const r=REG[NEXT.n];const tips=shipTip(doc);
+  $("next").innerHTML=`<div class="k">${NEXT.kind==="done"?"All sequences complete":NEXT.kind==="harden"?"Harden this first":NEXT.kind==="prereq"?"Prerequisite missing":"Run this next"}</div>
+    <div class="t">${esc(r.skill)} <span style="color:var(--dim);font-weight:400;font-size:14px">· writes §${NEXT.n}</span></div>
+    <div class="why">${esc(NEXT.why)}</div>
+    <div>Say: <span class="say">${esc(r.say)}</span></div>
+    ${tips.map(t=>`<div class="alt">⚑ ${esc(t)}</div>`).join("")}
+    <div class="goal"><label for="goal">Or route by goal: I want</label><select id="goal"><option value="">choose…</option>${Object.entries(GOALS).map(([k,v])=>`<option value="${k}">${esc(v)}</option>`).join("")}</select></div>
+    <div class="path" id="path"></div>`;
+  $("goal").addEventListener("change",e=>{const t=e.target.value;if(!t){$("path").innerHTML="";return}
+    const order=goalPath(doc,t);const gaps=order.filter(n=>status(doc,n)!=="complete");
+    $("path").innerHTML=order.map(n=>`<span class="step ${status(doc,n)==="complete"?"done":"gap"}">§${n} ${esc(REG[n].t)}${status(doc,n)==="provisional"?" (provisional)":""}</span>`).join("")+
+      (gaps.length?`<div style="margin-top:6px">${gaps.length} session${gaps.length===1?"":"s"} between you and ${esc(GOALS[t])}. Start with <b>${esc(REG[gaps[0]].skill)}</b>: <span class="say">${esc(REG[gaps[0]].say)}</span></div>`:`<div style="margin-top:6px">Everything ${esc(GOALS[t])} needs is complete.</div>`)});
+  // sequences
+  $("seqs").innerHTML=SEQ.map(seq=>`<div class="seq"><h3>${esc(seq.name)}</h3>${seq.secs.map(n=>secCard(doc,n)).join("")}</div>`).join("");
+  $("seqs").querySelectorAll(".sec").forEach(b=>b.addEventListener("click",()=>b.classList.toggle("open")));
+  // build plan
+  const pl=doc.plan;const now=Date.now();
+  const stale=pl.rows.filter(r=>r.status==="captured"&&r.date&&(now-Date.parse(r.date))>28*864e5);
+  $("bp").innerHTML=`<h2>Build Plan <span class="hint">· §13</span></h2>`+(pl.rows.length?`<div class="tw"><table><tr><th>Idea</th><th>Status</th><th>Owner</th><th>Next step</th><th>Produced</th></tr>${pl.rows.map(r=>`<tr><td>${esc(r.idea)}<div class="hint">${esc(r.source)}</div></td><td><span class="st ${esc(r.status)}">${esc(r.status||"—")}</span>${stale.includes(r)?`<div class="stale">captured ${Math.floor((now-Date.parse(r.date))/(7*864e5))} weeks ago, no date</div>`:""}</td><td>${esc(r.owner||"—")}</td><td>${esc(r.next||"—")}</td><td>${esc(r.produced||"—")}</td></tr>`).join("")}</table></div>`:`<p class="hint">No ideas captured yet. After your next brainstorm, say <span class="say">Capture what we decided</span> and they land here.</p>`)+
+    (stale.length?`<p class="stale" style="margin-top:8px">⚑ ${stale.length} captured idea${stale.length===1?"":"s"} older than four weeks with no next step. Schedule, park, or drop.</p>`:"")+
+    (pl.parked.length?`<h2 style="margin-top:14px">Parked</h2><div class="tw"><table><tr><th>Idea</th><th>Why not now</th><th>Revisit</th></tr>${pl.parked.map(r=>`<tr><td>${esc(r.idea)}</td><td>${esc(r.why)}</td><td>${esc(r.revisit)}</td></tr>`).join("")}</table></div>`:"")+
+    (pl.open.length?`<h2 style="margin-top:14px">Open questions</h2><ul style="padding-left:18px;font-size:13px;color:#d8d8e4">${pl.open.map(q=>`<li>${esc(q)}</li>`).join("")}</ul>`:"");
+  // log
+  $("log").innerHTML=`<h2>Session Log <span class="hint">· §8</span></h2>`+(doc.log.length?`<div class="tw"><table><tr><th>Date</th><th>Session</th><th>Status</th><th>★</th></tr>${doc.log.slice().reverse().map(c=>`<tr><td>${esc(c[0])}</td><td>${esc(c[1])}<div class="hint">${esc(c[2]||"")}</div></td><td>${esc(c[3]||"")}</td><td>${esc(c[4]||"")}</td></tr>`).join("")}</table></div>`:`<p class="hint">No sessions logged yet.</p>`);
+  // extras
+  const ex=doc.extras.filter(s=>s.n!==8);
+  $("extras").innerHTML=`<h2>Also in your file</h2>`+(ex.length?ex.map(s=>`<div class="f" style="font-size:13px;color:#d8d8e4;margin:4px 0">§${s.n} ${esc(s.title)} <span class="pill other">${esc(s.statusRaw||"custom")}</span></div>`).join("")+`<p class="hint" style="margin-top:8px">Sections outside the standard seventeen. Skills preserve them untouched.</p>`:`<p class="hint">Nothing outside the standard seventeen sections. Anything you add by hand shows up here.</p>`);
+  $("dash").classList.add("on");
+  $("dash").scrollIntoView({behavior:"smooth",block:"start"});
+}
+function secCard(doc,n){const r=REG[n];const s=doc.map[n];const st=s?s.status:"notstarted";
+  const fields=s?s.fields:[];const top=fields.filter(f=>!f.sub);const filled=top.filter(f=>f.filled).length;const ratio=top.length?filled/top.length:0;
+  const pillTxt=st==="notstarted"?"not started":(s&&s.statusRaw?s.statusRaw:st);
+  return`<button class="sec" aria-expanded="false"><div class="top"><span class="nm"><small>§${n}</small>${esc(r.t)}</span><span class="pill ${st}">${esc(pillTxt)}</span></div>
+    <div class="meta">${s&&s.updated&&isFilled(s.updated)?"Updated "+esc(s.updated):""}${s&&s.by&&isFilled(s.by)?" · by "+esc(s.by):""}${top.length?` · ${filled}/${top.length} fields`:""}</div>
+    ${top.length?`<div class="fill"><i style="width:${ratio*100}%"></i></div>`:""}
+    ${s&&s.warn.length?`<div class="flag">${esc(s.warn[0])}</div>`:""}
+    <div class="body">${fields.length?fields.map(f=>`<div class="f ${f.sub?"sub":""} ${f.filled?"":"empty"}">${f.label?`<b>${esc(f.label)}:</b> `:""}${esc(f.filled?f.value:(f.value||"—"))}</div>`).join(""):`<div class="f empty">Not in your file yet. ${r.skill?`Built by <b>${esc(r.skill)}</b>.`:""}</div>`}
+    ${r.say?`<div style="margin-top:8px">Say: <span class="say">${esc(r.say)}</span></div>`:""}</div></button>`}
+
+/* ---- wiring ---- */
+function run(){const md=$("src").value;$("errmsg").hidden=true;$("msg").hidden=true;
+  if(!/##\s+\d+\./.test(md)){$("errmsg").textContent="That doesn't look like a Business File. It should have headings like \"## 1. Business Snapshot\".";$("errmsg").hidden=false;return}
+  try{localStorage.setItem(KEY,md)}catch(e){}
+  render(parse(md))}
+$("go").addEventListener("click",run);
+$("src").addEventListener("keydown",e=>{if((e.metaKey||e.ctrlKey)&&e.key==="Enter")run()});
+$("file").addEventListener("change",e=>{const f=e.target.files[0];if(!f)return;f.text().then(t=>{$("src").value=t;run()})});
+const dz=$("drop");
+dz.addEventListener("dragover",e=>{e.preventDefault();dz.classList.add("over")});
+dz.addEventListener("dragleave",()=>dz.classList.remove("over"));
+dz.addEventListener("drop",e=>{e.preventDefault();dz.classList.remove("over");const f=e.dataTransfer.files[0];if(f)f.text().then(t=>{$("src").value=t;run()})});
+$("again").addEventListener("click",()=>{$("dash").classList.remove("on");window.scrollTo({top:0,behavior:"smooth"});$("src").focus()});
+$("print").addEventListener("click",()=>window.print());
+$("copyNext").addEventListener("click",async()=>{if(!NEXT)return;const r=REG[NEXT.n];const t=`Next Build Room session: ${r.skill} (writes §${NEXT.n}). ${NEXT.why} Say: "${r.say}"`;try{await navigator.clipboard.writeText(t);$("msg2").textContent="Copied.";$("msg2").hidden=false;setTimeout(()=>{$("msg2").hidden=true},2000)}catch(e){}});
+$("clear").addEventListener("click",()=>{try{localStorage.removeItem(KEY)}catch(e){}$("src").value="";$("dash").classList.remove("on");$("msg").textContent="Forgotten.";$("msg").hidden=false});
+$("sample").addEventListener("click",()=>{$("src").value=SAMPLE;run()});
+try{const last=localStorage.getItem(KEY);if(last){$("src").value=last;$("msg").textContent="Restored your last paste from this browser.";$("msg").hidden=false}}catch(e){}
+
+const SAMPLE="# Build Room Business File\n\n_One file. Every Build Room session reads it before asking you anything, and updates it before ending. Keep it with your business documents and bring it to every session._\n\n**Owner:** Brad Pluth [sourced; owner confirmation pending]\n**Business:** Golf Achievement Academy\n**File version:** 1.1 \u2014 customized draft\n**Last updated:** 2026-10-07 by Golf Achievement customization\n\n> **How to use this file:** Attach or paste it at the start of any Build Room session. The session will read it, skip every question it already answers, and hand you back an updated copy at the end. Replace your saved copy with the updated one. You can edit anything by hand at any time \u2014 your edits win.\n\n> **Evidence:** Public facts are sourced assertions; strategies are proposals. Read SOURCE_REGISTER.md and GOLF_ACHIEVEMENT_CONTEXT.md. Prices, guarantees, metrics, accounts, and founder values require confirmation. No sections are owner-validated yet.\n\n---\n\n## 1. Business Snapshot\n\n**Status:** provisional \u00b7 **Updated:** 2026-10-07 \u00b7 **By:** Golf Achievement customization\n\n- **What I do:** Personalized golf coaching and online golf education [sourced: BradPluthGolf.com].\n- **Who I serve (niche + segment):** Primary flagship segment: recreational golfers shooting roughly 95\u2013115 [sourced]. Other audiences require separate offers.\n- **Core result I deliver:** Build a more dependable golf game with a structured development plan [draft positioning].\n- **Current price / price range:** Unknown; indexed launch prices require verification. See SOURCE_REGISTER.md.\n- **Lead sources today (how people find me):** Both brand websites exist [sourced]; channel contribution, referrals, paid media, and conversion data unknown.\n- **Tools:** email platform: unknown \u00b7 CRM: unknown \u00b7 website/page builder: unknown \u00b7 automation: OFF / no setup performed\n\n---\n\n## 2. Ideal Client Avatar\n\n**Status:** provisional \u00b7 **Updated:** 2026-10-07 \u00b7 **By:** Golf Achievement customization\n_Built by: Ideal Client Avatar session_\n\n- **ICA name (fictional):** Alex, the committed recreational golfer [hypothesis].\n- **One-line profile (who + situation):** Wants to break 100 and is willing to practice, but lacks a clear improvement plan [hypothesis based on flagship audience].\n- **Job To Be Done** \u2014 functional: \u2014 \u00b7 emotional: \u2014 \u00b7 identity: \u2014\n- **Pain stack** \u2014 surface: \u2014 \u00b7 emotional: \u2014 \u00b7 identity (inner monologue): \u2014\n- **Dream state** \u2014 90 days: \u2014 \u00b7 1 year: \u2014\n- **Switching forces** \u2014 push: \u2014 \u00b7 pull: \u2014 \u00b7 anxiety: \u2014 \u00b7 habit: \u2014\n- **Awareness stage (Schwartz):** Problem/solution aware [hypothesis].\n- **Buying trigger (what makes them act now):** A frustrating round or upcoming golf event [hypothesis].\n- **Top objections** \u2014 spoken: \u2014 \u00b7 unspoken: \u2014\n- **Negative avatar (who I refuse to serve, and why):** Proposed fit boundary: someone seeking an instant result without practice; refer advanced competitive goals to an appropriate separate assessment.\n- **Sourced language** (exact phrases with provenance: `[client]` or `[web: source]`):\n  1. [web: https://bradpluthgolf.com/] Brand-authored phrase: \u201cCoaching For Golfers With Goals.\u201d Not customer testimony.\n- **Hypothesis language** (generated or guessed, `[hypothesis]` \u2014 never quote as a client's words):\n  1. [hypothesis] I practice, but I don't know what to change on the course.\n- **Audience Playbook:** GOLF_ACHIEVEMENT_MESSAGING.md\n- **Full ICA document:** GOLF_ACHIEVEMENT_MESSAGING.md\n\n---\n\n## 3. Signature Offer\n\n**Status:** provisional \u00b7 **Updated:** 2026-10-07 \u00b7 **By:** Golf Achievement customization\n_Built by: Signature Offer session \u00b7 Requires: \u00a72_\n\n- **Offer name:** Break 100 Blueprint\u2122 [sourced].\n- **Core transformation promise (one sentence):** Develop a practical scoring system and work toward breaking 100 [draft; no outcome guarantee].\n- **Engagement structure (length, format):** Publicly described as 40 sessions; exact self-paced/coached entitlements, timing, and support require confirmation.\n- **Phases + outcome per phase:**\n  - Phase 1: \u2014 \u2192 outcome: \u2014\n- **Named deliverables:** Proposed: baseline scorecard, personalized practice priorities, routine card, course-decision checklist, progress review.\n- **Value stack total:** $ \u2014 \u00b7 **Investment:** $ \u2014\n- **Guarantee (full wording):** Unconfirmed. Do not reuse indexed guarantee language until Brad approves exact terms.\n- **60-second pitch:** See GOLF_ACHIEVEMENT_MESSAGING.md; draft.\n- **The one belief (16-word):**\n- **Urgency (why now, real):** Begin with the next practice session; no invented deadline or enrollment cap.\n- **Full offer document:** GOLF_ACHIEVEMENT_MESSAGING.md\n- **Offer Deep Dive document:** [filename or link]\n\n---\n\n## 4. Positioning & Messaging\n\n**Status:** provisional \u00b7 **Updated:** 2026-10-07 \u00b7 **By:** Golf Achievement customization\n_Built by: Positioning & Messaging session \u00b7 Requires: \u00a72, \u00a73_\n\n- **Competitive alternative (what my best-fit client would do if I didn't exist):** Ad hoc lessons, equipment changes, or disconnected online tips [hypothesis].\n- **Market category:** Golf coaching and structured player development.\n- **Core differentiator (most ownable):** A connected development plan across movement, mindset, practice, and course decisions [proposed emphasis].\n- **Positioning statement:** Golf Achievement helps motivated recreational golfers turn practice into a dependable on-course plan [draft].\n- **Value proposition (one sentence):** Know what to work on, how to practice it, and what to measure next [draft].\n- **Tagline:** Build your game. Measure your progress. [new proposal]\n- **Villain statement (what's wrong with how my space operates):**\n- **For you if (top 3):**\n- **Not for you if (top 3):**\n- **Unfair advantage:**\n- **Full Messaging Bible:** GOLF_ACHIEVEMENT_MESSAGING.md\n\n---\n\n## 5. Offer Page\n\n**Status:** provisional \u00b7 **Updated:** 2026-10-07 \u00b7 **By:** Golf Achievement customization\n_Built by: Offer Page Copy session \u00b7 Requires: \u00a72, \u00a73, \u00a74_\n\n- **Chosen headline:** Your next round starts with a better plan. [draft]\n- **Page status:** draft \u00b7 URL: no new page deployed; copy in GOLF_ACHIEVEMENT_PAGE_COPY.md\n- **Proof assets used (results, testimonials, composites \u2014 labeled):** None; no fabricated client results or reused testimonials.\n- **Credibility anchor:** Brad Pluth, PGA Master Professional [public website assertion].\n- **Full page copy document:** GOLF_ACHIEVEMENT_PAGE_COPY.md\n\n---\n\n## 6. Funnel & Automation\n\n**Status:** provisional \u00b7 **Updated:** 2026-10-07 \u00b7 **By:** Golf Achievement customization\n_Built by: Funnel Map session \u00b7 Requires: \u00a71; better with \u00a72, \u00a73_\n\n- **Value ladder** \u2014 bait/entry: \u2014 \u00b7 core: \u2014 \u00b7 backend/continuity: \u2014\n- **Funnel type + single conversion event:** Two proposed routes: local assessment booking; online program enrollment. Track separately.\n- **Funnel map (compact step list):** Useful content \u2192 scorecard \u2192 route choice \u2192 local booking OR online program \u2192 onboarding \u2192 progress review.\n- **Biggest drop-off point:** Unknown; instrument before diagnosing.\n- **Email sequence:** Practice-to-Progress \u00b7 4 draft messages \u00b7 GOLF_ACHIEVEMENT_FUNNEL.md\n- **Automation trigger map (compact):** See GOLF_ACHIEVEMENT_FUNNEL.md; all workflows OFF / proposed.\n- **First build priority:** Validate offer and test both domain journeys end to end.\n- **Metrics** \u2014 opt-in rate: \u2014 \u00b7 show-up rate: \u2014 \u00b7 close rate: \u2014\n- **Funnel scorecard** (location \u00b7 cadence \u00b7 last run \u00b7 top leak):\n- **Leak finder routine** (ON/OFF \u00b7 cadence \u00b7 delivers to):\n\n---\n\n## 7. Lead Capture\n\n**Status:** provisional \u00b7 **Updated:** 2026-10-07 \u00b7 **By:** Golf Achievement customization\n_Built by: Lead Capture session \u00b7 Requires: \u00a76_\n\n- **Lead magnet (format + title):** The Next-Round Scorecard [new one-page draft in GOLF_ACHIEVEMENT_LEAD_MAGNET.md].\n- **Landing page:** status: draft copy only \u00b7 URL: none deployed\n- **Thank-you page + delivery automation:** status: proposed; not built or connected\n\n---\n\n## 9. Operations & SOPs\n\n**Status:** provisional \u00b7 **Updated:** 2026-10-07 \u00b7 **By:** Golf Achievement customization\n_Built by: SOP Creator session \u00b7 Requires: \u00a71_\n\n- **Processes documented** (name \u00b7 owner \u00b7 last reviewed):\n  - \u2014\n- **Top undocumented processes** (from triage, by priority):\n- **SOP library location:** GOLF_ACHIEVEMENT_SOPS.md\n- **Naming convention:** GA-SOP-01 through GA-SOP-04\n- **Review cadence:** Proposed monthly and whenever delivery changes.\n- **Maintenance trigger** (the event that forces an update):\n- **Automation candidates** (process \u00b7 go / no-go / partial \u00b7 stage: mapped / evals / shadow / approve-each / autonomous):\n  - \u2014\n- **Full Operations Pack:** GOLF_ACHIEVEMENT_SOPS.md\n\n---\n\n## 10. Team & Hiring\n\n**Status:** not started \u00b7 **Updated:** \u2014 \u00b7 **By:** \u2014\n_Built by: Hiring Ad + Interview Kit session \u00b7 Requires: \u00a79_\n\n- **Role** (title \u00b7 hours/wk \u00b7 contractor/employee \u00b7 pay range):\n- **Mission (one sentence):** If capacity requires support, reduce administrative load while preserving a personal golfer experience [proposal].\n- **Outcomes** (measurable, with timeframe):\n  1. \u2014\n- **SOPs this role bundles:**\n- **90-day standard:**\n- **Ad status** (drafted / posted where / closed):\n- **Funnel stage** (screening / work sample / interviews / references / offer / hired):\n- **Hire** (name \u00b7 start date \u00b7 trial end):\n- **Full Hiring Kit:** Not created; role, hours, budget, and hiring need unknown.\n\n---\n\n## 11. Training & Onboarding\n\n**Status:** not started \u00b7 **Updated:** \u2014 \u00b7 **By:** \u2014\n_Built by: Team Training Doc Builder session \u00b7 Requires: \u00a79, \u00a710_\n\n- **Training Handbook location:**\n- **Modules** (SOP \u00b7 checkout status \u00b7 date \u00b7 observer):\n  - \u2014\n- **Onboarding calendar** (start date \u00b7 current week):\n- **Sign-off owner:**\n- **FAQ location:**\n- **Maintenance trigger** (the event that forces a handbook update):\n- **Full Training Handbook:** Not created; depends on validated SOPs and an actual role.\n\n---\n\n## 12. Weekly Ops\n\n**Status:** provisional \u00b7 **Updated:** 2026-10-07 \u00b7 **By:** Golf Achievement customization\n_Built by: Weekly Ops Dashboard session \u00b7 Requires: \u00a79, \u00a711_\n\n- **Metrics** (name \u00b7 owner \u00b7 goal \u00b7 source):\n  - \u2014\n- **Weekly ops meeting** (day \u00b7 time \u00b7 attendees):\n- **Dashboard location:** index.html (local planning dashboard; not connected to live metrics).\n- **Routine** (ON/OFF \u00b7 schedule \u00b7 delivers to \u00b7 connectors):\n- **Current constraint** (one line \u00b7 since):\n- **Decision log location:** GOLF_ACHIEVEMENT_30_DAY_PLAN.md\n- **Full Ops Pack:** WEEKLY_SCORECARD.csv and GOLF_ACHIEVEMENT_SOPS.md\n\n---\n\n## 13. Build Plan\n\n**Status:** provisional \u00b7 **Updated:** 2026-10-07 \u00b7 **By:** Golf Achievement customization\n_Built by: Brainstorm Capture (and any session that produces an idea) \u00b7 Requires: \u2014_\n\n- **Ideas & builds** (idea \u00b7 source \u00b7 status \u00b7 owner \u00b7 next step \u00b7 produced):\n  - Validate flagship terms \u00b7 customization \u00b7 captured \u00b7 Brad (proposed owner) \u00b7 confirm price, delivery, guarantee \u00b7 GOLF_ACHIEVEMENT_30_DAY_PLAN.md\n  - _Statuses: captured \u2192 scheduled \u2192 building \u2192 shipped \u00b7 parked_\n- **Parked** (idea \u00b7 why \u00b7 revisit date):\n  - \u2014\n- **Open questions carried forward:** Price and guarantee? Canonical method name? Session entitlements? Booking URL? CRM and consent records? Coaching capacity?\n  - \u2014\n- **Brainstorm log location:** tools/Brainstorm_Board.html (local tool; no session conducted)\n- **Last brainstorm** (date \u00b7 framing question):\n\n---\n\n## 14. Lead Generation Engine\n\n**Status:** provisional \u00b7 **Updated:** 2026-10-07 \u00b7 **By:** Golf Achievement customization\n_Built by: Lead Gen Machine (four modules, one session each) \u00b7 Requires: \u00a71; best with \u00a72, \u00a73_\n\n- **Modules run** (module \u00b7 date \u00b7 status):\n  - 1 Warm Network: \u2014 \u00b7 2 Outreach Machine: \u2014 \u00b7 3 Referral System: \u2014 \u00b7 4 Content + Pipeline: \u2014\n- **Warm network** (contacts audited \u00b7 tier-A count \u00b7 scorecard location):\n- **Outreach** (channel \u00b7 list source \u00b7 message doc \u00b7 5-touch sequence doc):\n- **Referral system** (trigger moments \u00b7 ask-script doc \u00b7 partners):\n- **Content** (platform \u00b7 cadence \u00b7 content type \u00b7 calendar location):\n- **Pipeline tracker** (location \u00b7 stages):\n- **Weekly habit** (day \u00b7 time \u00b7 minutes):\n- **30-day targets** (conversations \u00b7 discovery calls \u00b7 deals):\n- **Results to date** (conversations \u00b7 calls \u00b7 clients \u00b7 best channel):\n- **Full Lead Gen Pack:** GOLF_ACHIEVEMENT_CONTENT.md and GOLF_ACHIEVEMENT_FUNNEL.md\n\n---\n\n## 15. Sales Conversations\n\n**Status:** provisional \u00b7 **Updated:** 2026-10-07 \u00b7 **By:** Golf Achievement customization\n_Built by: Sales Conversations session \u00b7 Requires: \u00a73; best with \u00a72, \u00a74_\n\n- **Scenario** (inbound / outbound / referral / appointment-set):\n- **Script location:** GOLF_ACHIEVEMENT_SALES_SCRIPT.md\n- **Weak stage + what changed:** Unknown; no sales calls audited.\n- **Top objections + one-line response:**\n  1. \u2014\n- **Role-play dates:**\n- **Call metrics** (booked \u00b7 held \u00b7 closed, weekly):\n- **Full Sales Script:** GOLF_ACHIEVEMENT_SALES_SCRIPT.md\n\n---\n\n## 16. Follow-Up Engine\n\n**Status:** provisional \u00b7 **Updated:** 2026-10-07 \u00b7 **By:** Golf Achievement customization\n_Built by: Decision Machine session \u00b7 Requires: \u00a73, \u00a76; best with \u00a72, \u00a77_\n\n- **Core belief (one sentence):** A structured plan makes purposeful improvement easier to track [draft].\n- **The five beliefs** (surface \u00b7 identity \u00b7 reframe \u00b7 proof \u00b7 anticipation):\n  1. \u2014\n- **Campaign map** (campaign \u00b7 entry tag \u00b7 exit tag \u00b7 belief \u00b7 awareness level \u00b7 status):\n  - \u2014\n- **Tag architecture doc:** \u00b7 **tag count:**\n- **Build status** (tags \u00b7 fields \u00b7 workflows \u00b7 messages \u2014 built / verified):\n- **Engagement tracker:** off \u00b7 Stagger: off (list size unknown)\n- **Reactivation** (list size \u00b7 verified \u00b7 sunset sent):\n- **Deliverability** (SPF/DKIM/DMARC checked \u00b7 unsubscribe \u00b7 complaint rate):\n- **Metrics to watch** (open \u00b7 reply \u00b7 booked \u00b7 per campaign):\n- **Full Decision Machine Pack:** GOLF_ACHIEVEMENT_FUNNEL.md (starter specification, not a complete CRM deployment)\n\n---\n\n## 17. Founder Compass\n\n**Status:** not started \u00b7 **Updated:** \u2014 \u00b7 **By:** \u2014\n_Built by: Compass session \u00b7 Requires: \u2014_\n\n- **Compass statement:**\n- **Top values (3):**\n- **Life philosophy (one sentence):**\n- **Personality pattern (plain words):**\n- **Zone of genius:**\n- **Spark zone:**\n- **Drain zone:**\n- **Blind spots:**\n- **Unique truth:**\n- **Communication style (how I sound at my best):** Proposed brand voice: practical, encouraging, clear. Founder personality and values have not been inferred.\n- **Full Compass document:** [filename or link]\n\n---\n\n## 8. Session Log\n\n| Date | Session | Outputs produced | Status | Rating (1\u20135) | Notes |\n|---|---|---|---|---|---|\n| 2026-10-07 | Golf Achievement customization | Context, draft business file, workflows, tools, local dashboard | provisional | \u2014 | Website research plus labeled proposals; no publication or installation. |\n";
+if(!$("src").value){$("src").value=SAMPLE;}
+run();
+})();
+</script>
+</body>
+</html>

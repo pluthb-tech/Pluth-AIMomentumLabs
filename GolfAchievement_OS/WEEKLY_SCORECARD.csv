@@ -1,0 +1,19 @@
+week_start,route,metric,value,target,source,owner,notes
+,local,unique_visitors,,,,,Blank means unknown; targets require baseline
+,local,new_inquiries,,,,,Blank means unknown; targets require baseline
+,local,qualified_inquiries,,,,,Blank means unknown; targets require baseline
+,local,bookings,,,,,Blank means unknown; targets require baseline
+,local,appointments_held,,,,,Blank means unknown; targets require baseline
+,local,offers_made,,,,,Blank means unknown; targets require baseline
+,local,paid_enrollments,,,,,Blank means unknown; targets require baseline
+,local,active_golfers,,,,,Blank means unknown; targets require baseline
+,local,sessions_delivered,,,,,Blank means unknown; targets require baseline
+,online,unique_visitors,,,,,Blank means unknown; targets require baseline
+,online,new_inquiries,,,,,Blank means unknown; targets require baseline
+,online,qualified_inquiries,,,,,Blank means unknown; targets require baseline
+,online,bookings,,,,,Blank means unknown; targets require baseline
+,online,appointments_held,,,,,Blank means unknown; targets require baseline
+,online,offers_made,,,,,Blank means unknown; targets require baseline
+,online,paid_enrollments,,,,,Blank means unknown; targets require baseline
+,online,active_golfers,,,,,Blank means unknown; targets require baseline
+,online,sessions_delivered,,,,,Blank means unknown; targets require baseline
